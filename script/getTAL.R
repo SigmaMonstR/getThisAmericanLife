@@ -1,6 +1,7 @@
+########################################
+##getTAL. Download episode transcripts##
+########################################
 
-#This American Life: Scraping
-##Episode Function
   getTAL <- function(ep.num){
     # A function to download episode transcripts from ThisAmericanLife.org
     #
