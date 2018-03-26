@@ -15,7 +15,7 @@
   transcripts <- data.frame()
   
 #Loop through each episode
-  for(k in 286:max.ep){
+  for(k in 460:max.ep){
     print(k)
     Sys.sleep(runif(1)*2)
     out <- getTAL(k)
