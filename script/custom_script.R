@@ -15,19 +15,17 @@
   transcripts <- data.frame()
   
 #Loop through each episode
-  for(k in 1:max.ep){
+  for(k in 286:max.ep){
     print(k)
     Sys.sleep(runif(1)*2)
     out <- getTAL(k)
-    episodes <- rbind(episodes, as.data.frame(out[1]))
-    transcripts <- rbind(transcripts, as.data.frame(out[2]))
+    episodes <- rbind(episodes,out)
     if(k %% 10 == 0){
-      save(episodes, transcripts, file = "TAL1to600.Rda")
+      save(episodes, file = "TAL1to641.Rda")
     }
   }
   
 #
-  save(episodes, transcripts, file = "TAL1to600.Rda")
-  write.csv(transcripts, "TAL_transcript.csv", row.names = FALSE)
+  save(episodes, file = "TAL1to641.Rda")
   write.csv(episodes, "TAL_episodes.csv", row.names = FALSE)
   

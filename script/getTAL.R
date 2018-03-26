@@ -1,6 +1,7 @@
 ########################################
-##getTAL. Download episode transcripts##
+##getTAL: Download episode transcripts##
 ########################################
+
 getTAL <- function(ep_num){
   # A function to download episode transcripts from ThisAmericanLife.org
   #
@@ -15,6 +16,7 @@ getTAL <- function(ep_num){
   url <- paste0("https://www.thisamericanlife.org/", ep_num, "/transcript")
   tal <- read_html(url)
   
+  #Get Title
   title <- tal %>%
     html_node("title") %>%
     html_text()
@@ -25,47 +27,58 @@ getTAL <- function(ep_num){
   
   #Get section heading
   dialogue <- data.frame()
-  for(i in 1:length(sections)){
-    
-    #Top line
-    act_title <- html_nodes(sections[[i]], "h3") %>% html_text()
-    act_num <- i
-    
-    #Inner
-    a <- html_nodes(sections[[i]], "div.act-inner > div ")
-    for(j in 1:length(a)){
-      print(j)
-      b <- a[j]
+  if(length(sections) > 0){
+    for(i in 1:length(sections)){
       
-      for(m in 1:length(b)){
-        speaker <- html_nodes(b[m], "h4") %>% html_text() 
-        speaker.type <- html_attr(b[m],"class")
-        if(length(speaker) == 0){
-          speaker <- ""
-        } 
+      #Top line
+      act_title <- html_nodes(sections[[i]], "h3") %>% html_text()
+      act_num <- i
+      
+      #Inner Content
+      a <- html_nodes(sections[[i]], "div.act-inner > div ")
+      
+      #Loop through each speaking turn
+      for(j in 1:length(a)){
+        print(j)
+        b <- a[j]
         
-        
-        line <- html_nodes(b[m], "p") %>% html_text() 
-        times <- html_nodes(b[m], "p") %>% html_attr("begin") 
-        para <- 1:length(times)
-        dialogue <- rbind(dialogue, 
-                          data.frame(ep_num = ep_num,
-                                     title = title,
-                                     act_title = act_title, 
-                                     act_num = act_num,
-                                     speaker = speaker,
-                                     speaker_type = speaker.type,
-                                     turn = j,
-                                     paragraph = para,
-                                     times = times,
-                                     text = line))
+        #Within each speaking turn
+        for(m in 1:length(b)){
+          
+          #Identify the speaker
+          speaker <- html_nodes(b[m], "h4") %>% html_text() 
+          
+          #The type of speaker
+          speaker.type <- html_attr(b[m],"class")
+          if(length(speaker) <=1){
+            speaker <- ""
+          } 
+          
+          #Extract what they said and the timing
+          line <- html_nodes(b[m], "p") %>% html_text() 
+          times <- html_nodes(b[m], "p") %>% html_attr("begin") 
+          para <- 1:length(times)
+          
+          #Log the speaker turn, parapgraph, text, etc.
+          if(length(line) >=1 && length(times) >= 1){
+            dialogue <- rbind(dialogue, 
+                              data.frame(ep_num = ep_num,
+                                         title = title,
+                                         act_title = act_title, 
+                                         act_num = act_num,
+                                         speaker = speaker,
+                                         speaker_type = speaker.type,
+                                         turn = j,
+                                         paragraph = para,
+                                         times = times,
+                                         text = line))
+          }
+        }
       }
-      
-      
     }
-    
+    return(dialogue)
   }
-  return(dialogue)
+  
 }
 
 
