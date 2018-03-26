@@ -4,9 +4,9 @@
 
 #Set directory
   dir <- "[working directory]"
-  max.ep <- 600
+  max.ep <- 641
   
-#Load getTAL(), requires rvest and RCurl
+#Load getTAL(), requires rvest
   source("https://raw.githubusercontent.com/SigmaMonstR/getThisAmericanLife/master/script/getTAL.R")
   
 #Set up tables

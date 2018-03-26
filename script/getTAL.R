@@ -1,69 +1,71 @@
 ########################################
 ##getTAL. Download episode transcripts##
 ########################################
-
-  getTAL <- function(ep.num){
-    # A function to download episode transcripts from ThisAmericanLife.org
-    #
-    # Args:
-    #       ep.num: an integer corresponding to an episode number
-    #
-    # Returns:
-    #       A list containing two data farmes: an episode table and a transcript table
-    #
+getTAL <- function(ep_num){
+  # A function to download episode transcripts from ThisAmericanLife.org
+  #
+  # Args:
+  #       ep_num: an integer corresponding to an episode number
+  #
+  # Returns:
+  #       A list containing one data frame
+  #
+  
+  require(rvest)
+  url <- paste0("https://www.thisamericanlife.org/", ep_num, "/transcript")
+  tal <- read_html(url)
+  
+  title <- tal %>%
+    html_node("title") %>%
+    html_text()
+  
+  #Get all sections
+  sections <- tal %>%
+    html_nodes("div.content > div.act") 
+  
+  #Get section heading
+  dialogue <- data.frame()
+  for(i in 1:length(sections)){
     
-    #Readlines to find content IDs
-    library(rvest)
-    library(RCurl)
+    #Top line
+    act_title <- html_nodes(sections[[i]], "h3") %>% html_text()
+    act_num <- i
     
-    #Create URL
-      urlTAL <- paste0("https://www.thisamericanlife.org/radio-archives/episode/",ep.num,"/transcript")
-
-    #Check if episode transcript exists
-      check <- url.exists(urlTAL)
+    #Inner
+    a <- html_nodes(sections[[i]], "div.act-inner > div ")
+    for(j in 1:length(a)){
+      print(j)
+      b <- a[j]
       
-      if(check){
+      for(m in 1:length(b)){
+        speaker <- html_nodes(b[m], "h4") %>% html_text() 
+        speaker.type <- html_attr(b[m],"class")
+        if(length(speaker) == 0){
+          speaker <- ""
+        } 
         
-        a <- readLines(urlTAL)
         
-        #title
-        title <- grep("<a href=\"/radio-archives/episode/", a, value = TRUE)[1]
-        title <- substr(title, regexpr(">", title)+1,regexpr("</a>",title)-1)
-        
-        #date
-        radiodate <- grep("class=\"radio\\-date\"",a, value = TRUE)
-        date <- regmatches(radiodate, regexpr("\\d{2}\\.\\d{2}\\.\\d{4}",radiodate))
-        
-        meta <- data.frame(title = title,
-                           link = urlTAL,
-                           date = date,
-                           ep.num = ep.num, 
-                           available = TRUE)
-        
-        scraped <- read_html(urlTAL)
-        
-        output <- data.frame()
-        #get text
-        b <- grep("\"act\"",a, value = TRUE)
-        c <- paste0("#",gsub("[[:punct:]]","", gsub("^id","", regmatches(b,regexpr("id=\"[[:alnum:]]{1,100}\"",b)))))
-        for(k in 1:length(c)){
-          temp <- scraped %>%
-            html_nodes(c[k]) %>% html_text()
-          output <- rbind(output, 
-                          data.frame(ep.num = ep.num,
-                                     tag = c[k],
-                                     text = unlist(temp)))
-        }
-      } else {
-        meta <- data.frame(title = NA,
-                           date = NA,
-                           ep.num = ep.num, 
-                           available = FALSE)
-        output <- data.frame(ep.num = ep.num,
-                             tag = NA,
-                             text = NA)
+        line <- html_nodes(b[m], "p") %>% html_text() 
+        times <- html_nodes(b[m], "p") %>% html_attr("begin") 
+        para <- 1:length(times)
+        dialogue <- rbind(dialogue, 
+                          data.frame(ep_num = ep_num,
+                                     title = title,
+                                     act_title = act_title, 
+                                     act_num = act_num,
+                                     speaker = speaker,
+                                     speaker_type = speaker.type,
+                                     turn = j,
+                                     paragraph = para,
+                                     times = times,
+                                     text = line))
       }
+      
+      
+    }
     
-    return(list(meta, output))
   }
+  return(dialogue)
+}
+
 
